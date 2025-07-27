@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US States & Counties Interactive Map</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">US States & Counties Interactive Map</h1>
+            <p class="subtitle">Click on a state to explore its counties</p>
+            <div class="breadcrumb" id="breadcrumb">
+                <span class="breadcrumb-item active" data-level="states">United States</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="map-controls">
+                    <button id="back-btn" class="btn btn-secondary" style="display: none;">
+                        ← Back
+                    </button>
+                    <button id="home-btn" class="btn btn-primary">
+                        🏠 Home
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-panel" id="info-panel">
+                <div class="info-content">
+                    <h3 id="info-title">Welcome to the US Interactive Map</h3>
+                    <p id="info-description">
+                        Click on any state to explore its counties and learn more about the geography and demographics of the United States.
+                    </p>
+                    <div id="info-details"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 US Interactive Map. Built with Leaflet.js and modern web technologies.</p>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+    <script src="script.js"></script>
+</body>
+</html>

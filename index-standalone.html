@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US States & Counties Interactive Map</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-item {
+            padding: 8px 16px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .breadcrumb-item:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .breadcrumb-item.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            flex: 1;
+        }
+
+        .map-container {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 20px;
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            height: fit-content;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .info-content h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .info-content p {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .info-details {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-details h4 {
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .info-details p {
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .info-panel {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            #map {
+                height: 400px;
+            }
+            
+            .map-controls {
+                top: 10px;
+                left: 10px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Map Customization */
+        .leaflet-popup-content-wrapper {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .leaflet-popup-content {
+            margin: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .leaflet-popup-tip {
+            background: white;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #4a5568;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Simple map fallback */
+        .map-fallback {
+            background: #f7fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .map-fallback h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .map-fallback p {
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .state-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .state-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .state-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .state-card h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .state-card p {
+            color: #4a5568;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">US States & Counties Interactive Map</h1>
+            <p class="subtitle">Click on a state to explore its counties</p>
+            <div class="breadcrumb" id="breadcrumb">
+                <span class="breadcrumb-item active" data-level="states">United States</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="map-container">
+                <div id="map" class="map-fallback">
+                    <h2>US States Interactive Map</h2>
+                    <p>Loading interactive map...</p>
+                    <div class="state-grid" id="state-grid">
+                        <!-- States will be loaded here -->
+                    </div>
+                </div>
+                <div class="map-controls">
+                    <button id="back-btn" class="btn btn-secondary" style="display: none;">
+                        ← Back
+                    </button>
+                    <button id="home-btn" class="btn btn-primary">
+                        🏠 Home
+                    </button>
+                </div>
+            </div>
+
+            <div class="info-panel" id="info-panel">
+                <div class="info-content">
+                    <h3 id="info-title">Welcome to the US Interactive Map</h3>
+                    <p id="info-description">
+                        Click on any state to explore its counties and learn more about the geography and demographics of the United States.
+                    </p>
+                    <div id="info-details"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 US Interactive Map. Built with modern web technologies.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let currentLevel = 'states';
+        let currentState = null;
+        let currentCounty = null;
+        let stateData = {};
+        let countyData = {};
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadStatesData();
+            createStateCards();
+        });
+
+        function setupEventListeners() {
+            // Back button
+            document.getElementById('back-btn').addEventListener('click', goBack);
+            
+            // Home button
+            document.getElementById('home-btn').addEventListener('click', goHome);
+            
+            // Breadcrumb navigation
+            document.getElementById('breadcrumb').addEventListener('click', function(e) {
+                if (e.target.classList.contains('breadcrumb-item')) {
+                    const level = e.target.dataset.level;
+                    navigateToLevel(level);
+                }
+            });
+        }
+
+        function loadStatesData() {
+            // State data
+            stateData = {
+                'california': {
+                    name: 'California',
+                    capital: 'Sacramento',
+                    population: '39,538,223',
+                    area: '163,696 sq mi',
+                    counties: 58,
+                    description: 'The Golden State is known for its diverse geography, from the Pacific Coast to the Sierra Nevada mountains.'
+                },
+                'texas': {
+                    name: 'Texas',
+                    capital: 'Austin',
+                    population: '29,145,505',
+                    area: '268,596 sq mi',
+                    counties: 254,
+                    description: 'The Lone Star State is the second-largest state by both area and population.'
+                },
+                'florida': {
+                    name: 'Florida',
+                    capital: 'Tallahassee',
+                    population: '21,538,187',
+                    area: '65,758 sq mi',
+                    counties: 67,
+                    description: 'The Sunshine State is known for its warm climate and beautiful beaches.'
+                },
+                'new-york': {
+                    name: 'New York',
+                    capital: 'Albany',
+                    population: '20,201,249',
+                    area: '54,555 sq mi',
+                    counties: 62,
+                    description: 'The Empire State is home to New York City, the most populous city in the United States.'
+                },
+                'pennsylvania': {
+                    name: 'Pennsylvania',
+                    capital: 'Harrisburg',
+                    population: '13,002,700',
+                    area: '46,054 sq mi',
+                    counties: 67,
+                    description: 'The Keystone State played a crucial role in the founding of the United States.'
+                },
+                'illinois': {
+                    name: 'Illinois',
+                    capital: 'Springfield',
+                    population: '12,812,508',
+                    area: '57,914 sq mi',
+                    counties: 102,
+                    description: 'The Prairie State is known for its rich agricultural heritage and vibrant cities.'
+                },
+                'ohio': {
+                    name: 'Ohio',
+                    capital: 'Columbus',
+                    population: '11,799,448',
+                    area: '44,825 sq mi',
+                    counties: 88,
+                    description: 'The Buckeye State is located in the heart of the Midwest.'
+                },
+                'georgia': {
+                    name: 'Georgia',
+                    capital: 'Atlanta',
+                    population: '10,711,908',
+                    area: '59,425 sq mi',
+                    counties: 159,
+                    description: 'The Peach State is known for its southern hospitality and rich history.'
+                },
+                'michigan': {
+                    name: 'Michigan',
+                    capital: 'Lansing',
+                    population: '10,077,331',
+                    area: '96,714 sq mi',
+                    counties: 83,
+                    description: 'The Great Lakes State is surrounded by four of the five Great Lakes.'
+                },
+                'north-carolina': {
+                    name: 'North Carolina',
+                    capital: 'Raleigh',
+                    population: '10,439,388',
+                    area: '53,819 sq mi',
+                    counties: 100,
+                    description: 'The Tar Heel State offers beautiful mountains and coastline.'
+                }
+            };
+        }
+
+        function createStateCards() {
+            const stateGrid = document.getElementById('state-grid');
+            stateGrid.innerHTML = '';
+            
+            Object.keys(stateData).forEach(stateKey => {
+                const state = stateData[stateKey];
+                const card = document.createElement('div');
+                card.className = 'state-card';
+                card.onclick = () => selectState(stateKey);
+                
+                card.innerHTML = `
+                    <h3>${state.name}</h3>
+                    <p><strong>Capital:</strong> ${state.capital}</p>
+                    <p><strong>Population:</strong> ${state.population}</p>
+                    <p><strong>Counties:</strong> ${state.counties}</p>
+                `;
+                
+                stateGrid.appendChild(card);
+            });
+        }
+
+        function selectState(stateKey) {
+            currentState = stateKey;
+            currentLevel = 'counties';
+            
+            // Update breadcrumb
+            updateBreadcrumb();
+            
+            // Show back button
+            document.getElementById('back-btn').style.display = 'block';
+            
+            // Load county data for the selected state
+            loadCountyData(stateKey);
+            
+            // Update info panel
+            updateInfoPanel();
+            
+            // Show counties
+            showCounties(stateKey);
+        }
+
+        function loadCountyData(stateKey) {
+            const countyCount = stateData[stateKey].counties;
+            countyData = {};
+            
+            // Generate sample counties
+            for (let i = 1; i <= Math.min(countyCount, 20); i++) {
+                const countyKey = `county-${i}`;
+                countyData[countyKey] = {
+                    name: `County ${i}`,
+                    population: Math.floor(Math.random() * 500000) + 10000,
+                    area: Math.floor(Math.random() * 2000) + 100,
+                    seat: `City ${i}`,
+                    description: `This is a sample county in ${stateData[stateKey].name}.`
+                };
+            }
+        }
+
+        function showCounties(stateKey) {
+            const mapContainer = document.getElementById('map');
+            const state = stateData[stateKey];
+            
+            mapContainer.innerHTML = `
+                <h2>${state.name} Counties</h2>
+                <p>Click on a county to view details</p>
+                <div class="state-grid" id="county-grid">
+                    ${Object.keys(countyData).map(countyKey => {
+                        const county = countyData[countyKey];
+                        return `
+                            <div class="state-card" onclick="selectCounty('${countyKey}')">
+                                <h3>${county.name}</h3>
+                                <p><strong>County Seat:</strong> ${county.seat}</p>
+                                <p><strong>Population:</strong> ${county.population.toLocaleString()}</p>
+                                <p><strong>Area:</strong> ${county.area} sq mi</p>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function selectCounty(countyKey) {
+            currentCounty = countyKey;
+            currentLevel = 'county-detail';
+            
+            // Update breadcrumb
+            updateBreadcrumb();
+            
+            // Update info panel with county details
+            updateInfoPanel();
+            
+            // Show county details
+            showCountyDetails(countyKey);
+        }
+
+        function showCountyDetails(countyKey) {
+            const mapContainer = document.getElementById('map');
+            const county = countyData[countyKey];
+            const state = stateData[currentState];
+            
+            mapContainer.innerHTML = `
+                <h2>${county.name}</h2>
+                <p>${county.description}</p>
+                <div class="info-details">
+                    <h4>County Information</h4>
+                    <p><strong>State:</strong> ${state.name}</p>
+                    <p><strong>County Seat:</strong> ${county.seat}</p>
+                    <p><strong>Population:</strong> ${county.population.toLocaleString()}</p>
+                    <p><strong>Area:</strong> ${county.area} sq mi</p>
+                </div>
+            `;
+        }
+
+        function updateBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            breadcrumb.innerHTML = '';
+            
+            if (currentLevel === 'states') {
+                breadcrumb.innerHTML = '<span class="breadcrumb-item active" data-level="states">United States</span>';
+            } else if (currentLevel === 'counties') {
+                breadcrumb.innerHTML = `
+                    <span class="breadcrumb-item" data-level="states">United States</span>
+                    <span class="breadcrumb-item active" data-level="counties">${stateData[currentState].name}</span>
+                `;
+            } else if (currentLevel === 'county-detail') {
+                breadcrumb.innerHTML = `
+                    <span class="breadcrumb-item" data-level="states">United States</span>
+                    <span class="breadcrumb-item" data-level="counties">${stateData[currentState].name}</span>
+                    <span class="breadcrumb-item active" data-level="county-detail">${countyData[currentCounty].name}</span>
+                `;
+            }
+        }
+
+        function updateInfoPanel() {
+            const infoTitle = document.getElementById('info-title');
+            const infoDescription = document.getElementById('info-description');
+            const infoDetails = document.getElementById('info-details');
+            
+            if (currentLevel === 'states') {
+                infoTitle.textContent = 'Welcome to the US Interactive Map';
+                infoDescription.textContent = 'Click on any state to explore its counties and learn more about the geography and demographics of the United States.';
+                infoDetails.innerHTML = `
+                    <div class="info-details">
+                        <h4>Quick Facts</h4>
+                        <p><strong>Total States:</strong> 50</p>
+                        <p><strong>Total Counties:</strong> 3,142</p>
+                        <p><strong>Largest State:</strong> Alaska (665,384 sq mi)</p>
+                        <p><strong>Most Populous:</strong> California (39.5M)</p>
+                    </div>
+                `;
+            } else if (currentLevel === 'counties') {
+                const state = stateData[currentState];
+                infoTitle.textContent = state.name;
+                infoDescription.textContent = state.description || `Explore the counties of ${state.name}.`;
+                infoDetails.innerHTML = `
+                    <div class="info-details">
+                        <h4>State Information</h4>
+                        <p><strong>Capital:</strong> ${state.capital}</p>
+                        <p><strong>Population:</strong> ${state.population}</p>
+                        <p><strong>Area:</strong> ${state.area}</p>
+                        <p><strong>Counties:</strong> ${state.counties}</p>
+                        <p><strong>Counties Shown:</strong> ${Object.keys(countyData).length}</p>
+                    </div>
+                `;
+            } else if (currentLevel === 'county-detail') {
+                const county = countyData[currentCounty];
+                const state = stateData[currentState];
+                infoTitle.textContent = county.name;
+                infoDescription.textContent = county.description;
+                infoDetails.innerHTML = `
+                    <div class="info-details">
+                        <h4>County Information</h4>
+                        <p><strong>State:</strong> ${state.name}</p>
+                        <p><strong>County Seat:</strong> ${county.seat}</p>
+                        <p><strong>Population:</strong> ${county.population.toLocaleString()}</p>
+                        <p><strong>Area:</strong> ${county.area} sq mi</p>
+                    </div>
+                `;
+            }
+        }
+
+        function goBack() {
+            if (currentLevel === 'county-detail') {
+                currentLevel = 'counties';
+                currentCounty = null;
+                document.getElementById('back-btn').style.display = 'block';
+                showCounties(currentState);
+            } else if (currentLevel === 'counties') {
+                currentLevel = 'states';
+                currentState = null;
+                document.getElementById('back-btn').style.display = 'none';
+                createStateCards();
+            }
+            
+            updateBreadcrumb();
+            updateInfoPanel();
+        }
+
+        function goHome() {
+            currentLevel = 'states';
+            currentState = null;
+            currentCounty = null;
+            
+            document.getElementById('back-btn').style.display = 'none';
+            createStateCards();
+            updateBreadcrumb();
+            updateInfoPanel();
+        }
+
+        function navigateToLevel(level) {
+            if (level === 'states') {
+                goHome();
+            } else if (level === 'counties' && currentState) {
+                currentLevel = 'counties';
+                currentCounty = null;
+                document.getElementById('back-btn').style.display = 'block';
+                showCounties(currentState);
+                updateBreadcrumb();
+                updateInfoPanel();
+            }
+        }
+    </script>
+</body>
+</html>
